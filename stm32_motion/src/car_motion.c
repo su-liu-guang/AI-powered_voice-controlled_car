@@ -2,6 +2,13 @@
 #include "car_protocol.h"
 #include "car_config.h"
 
+CarMotion CarMotion_DecodeConfigured(uint8_t state)
+{
+    const uint8_t movement = state & (CAR_FORWARD | CAR_BACKWARD | CAR_LEFT | CAR_RIGHT);
+    const uint8_t speed = movement == CAR_FORWARD ? CAR_FORWARD_SPEED_PERCENT : CAR_SPEED_PERCENT;
+    return CarMotion_Decode(state, speed);
+}
+
 CarMotion CarMotion_Decode(uint8_t state, uint8_t speed)
 {
     CarMotion motion = {0, 0};

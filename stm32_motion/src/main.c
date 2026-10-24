@@ -20,7 +20,7 @@ int main(void)
             CarParser_Reset(&parser);
         }
         if (available && CarParser_Feed(&parser, byte, &state)) {
-            const CarMotion motion = CarMotion_Decode(state, CAR_SPEED_PERCENT);
+            const CarMotion motion = CarMotion_DecodeConfigured(state);
             Motor_Set(motion.left, motion.right);
         }
         /* 硬件 PWM 持续输出；无阻塞延时、循迹、避障或自动停车计时。 */

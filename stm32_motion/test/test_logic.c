@@ -75,14 +75,22 @@ int Test_Run(void)
     /* 每行依次对应运动位 0..15；LED 不改变运动。 */
     const int16_t expected[16][2] = {
         {0,0}, {70,70}, {-70,-70}, {0,0},
-        {35,70}, {35,70}, {-70,-35}, {0,0},
-        {70,35}, {70,35}, {-35,-70}, {0,0},
+        {56,70}, {56,70}, {-70,-56}, {0,0},
+        {70,56}, {70,56}, {-56,-70}, {0,0},
         {0,0}, {0,0}, {0,0}, {0,0}
     };
     for (unsigned s = 0; s < 32; ++s) {
         const CarMotion motion = CarMotion_Decode((uint8_t)s, 70);
         CHECK(motion.left == expected[s & 15][0]);
         CHECK(motion.right == expected[s & 15][1]);
+        const CarMotion configured = CarMotion_DecodeConfigured((uint8_t)s);
+        const bool straight_forward = (s & 15) == CAR_FORWARD;
+        CHECK(configured.left == (straight_forward ? 80 : expected[s & 15][0]));
+        CHECK(configured.right == (straight_forward ? 80 : expected[s & 15][1]));
+    }
+    for (unsigned s = 32; s < 256; ++s) {
+        const CarMotion invalid = CarMotion_DecodeConfigured((uint8_t)s);
+        CHECK(invalid.left == 0 && invalid.right == 0);
     }
     CHECK(CarMotion_Decode(CAR_FORWARD, 255).left == 100);
     CHECK(CarMotion_Decode(CAR_BACKWARD, 255).right == -100);
@@ -92,10 +100,10 @@ int Test_Run(void)
     CHECK(CarMotion_Decode(CAR_LEFT, 0).right == 0);
     CHECK(CarMotion_Decode(CAR_LEFT, 1).left == 1);
     CHECK(CarMotion_Decode(CAR_RIGHT, 1).right == 1);
-    CHECK(CarMotion_Decode(CAR_LEFT, 255).left == 50);
+    CHECK(CarMotion_Decode(CAR_LEFT, 255).left == 80);
     CHECK(CarMotion_Decode(CAR_LEFT, 255).right == 100);
     CHECK(CarMotion_Decode(CAR_RIGHT, 255).left == 100);
-    CHECK(CarMotion_Decode(CAR_RIGHT, 255).right == 50);
+    CHECK(CarMotion_Decode(CAR_RIGHT, 255).right == 80);
     for (unsigned speed = 2; speed <= 100; ++speed) {
         const CarMotion left = CarMotion_Decode(CAR_LEFT, (uint8_t)speed);
         const CarMotion right = CarMotion_Decode(CAR_RIGHT, (uint8_t)speed);
