@@ -22,7 +22,9 @@ function render(data) {
     if(!connected)el('source').textContent='连接断开，控制来源待确认';
     for (const button of directions) button.disabled = !mine;
     el('stop').disabled = !mine;
-    el('voice').disabled = !capture && (!mine || !data.platform || !window.isSecureContext || !navigator.mediaDevices?.getUserMedia || !window.AudioWorkletNode);
+    el('fire').disabled = !mine;
+    // 先允许用户点击，浏览器才有机会弹出麦克风授权；录音条件在点击后明确提示。
+    el('voice').disabled = !capture && !mine;
 }
 function request(op, fields={}, binary=null) {
     if (socket?.readyState !== WebSocket.OPEN) return Promise.reject(Error('连接已断开，请重新连接'));
@@ -84,6 +86,10 @@ for(const button of directions){
     for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,event=>{if(heldDirection===`p${event.pointerId}`)stopMovement();});
 }
 el('stop').onclick=()=>stopMovement(true);
+el('fire').onclick=()=>{
+    if(!info.enabled||!info.mine)return;
+    request('fire').then(data=>notice(data.message)).catch(fail);
+};
 const keys={KeyW:1,ArrowUp:1,KeyS:2,ArrowDown:2,KeyA:8,ArrowLeft:8,KeyD:4,ArrowRight:4};
 window.addEventListener('keydown',event=>{
     if(/INPUT|TEXTAREA|SELECT/.test(event.target.tagName)||event.target.isContentEditable||!info.mine)return;
@@ -133,6 +139,11 @@ async function beginVoice(){
     stopMovement();voiceHeld=true;
     startingVoice=true;const token=++captureToken;let resources={};
     try{
+        if(!window.isSecureContext)throw Error('浏览器未将本页视为安全页面，请信任本地根证书后重新打开 HTTPS 页面。');
+        if(!navigator.mediaDevices?.getUserMedia)throw Error('此浏览器无法申请麦克风权限，请用支持录音的完整浏览器打开本页。');
+        if(!window.AudioWorkletNode)throw Error('此浏览器不支持音频处理，请换用支持录音的完整浏览器。');
+        // 授权弹窗出现前先给出可见反馈，避免点击后页面看起来没有响应。
+        el('mic-state').textContent='正在申请麦克风权限，请在浏览器提示中选择允许…';
         const context=new AudioContext();resources.context=context;
         await context.resume();
         resources.stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true},video:false});
@@ -148,7 +159,7 @@ async function beginVoice(){
         node.port.onmessage=event=>{if(event.data.pcm)queuePcm(event.data.pcm,token);if(event.data.done)resources.finish();};
         resources.source.connect(node);node.connect(resources.sink);resources.sink.connect(context.destination);
         el('voice').classList.add('active');el('voice').textContent='关闭收听';el('mic-state').textContent='正在接收浏览器音频…';notice('录音中');
-    }catch(error){await releaseCapture(resources);await cancelCapture(true);fail(error);}
+    }catch(error){await releaseCapture(resources);await cancelCapture(true);fail(error);el('mic-state').textContent=el('notice').textContent;}
     finally{startingVoice=false;}
 }
 async function endVoice(){

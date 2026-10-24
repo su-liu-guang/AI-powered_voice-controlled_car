@@ -11,4 +11,10 @@ int main() {
     car.NextInput(); car.ApplyState(2); assert(car.state_==2);
     car.ApplyRemoteState(8); car.ApplyState(4); assert(car.state_==8);
     car.NextInput(); car.ApplyState(4); assert(car.state_==4);
+    car.FireRemote(); assert(car.state_==0x14);
+    car.FireRemote(); assert(car.state_==0x14);
+    car.ApplyState(2); assert(car.state_==0x14);
+    car.ApplyRemoteState(0); assert(car.state_==0);
+    car.FireRemote(); assert(car.state_==0x10);
+    car.NextInput(); car.ApplyState(0); assert(car.state_==0);
 }

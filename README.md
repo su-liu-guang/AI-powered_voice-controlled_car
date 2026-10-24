@@ -5,16 +5,16 @@
 | 目录 | 用途 |
 | --- | --- |
 | [linx-esp32](linx-esp32/) | 麦克风上传、平台激活、AI JSON 严格校验、连续监听及 UART 动作下发 |
-| [stm32_motion](stm32_motion/) | USART1 接收 AA55 状态帧、TIM4 PWM 与差速运动控制 |
-| [发布包](releases/2026-10-24-web-remote/README.md) | 固件、烧录地址、接线、验证状态及 SHA-256 校验清单 |
+| [stm32_motion](stm32_motion/) | USART1 接收 AA55 状态帧、TIM4 PWM、差速运动与单次蓄力重炮灯效 |
+| [发布包](releases/2026-10-25-fire/README.md) | 固件、烧录地址、接线、验证状态及 SHA-256 校验清单 |
 
-## 当前发布：2026-10-24-web-remote
+## 当前发布：2026-10-25-fire
 
-新增独立 HTTPS 网页遥控、手机点击持续收听、网页独占接管及热点常开。手机音频处理与云端发送分任务运行，配网页与遥控页分离。完整 AI JSON 仍校验后下发。
+网页新增“发射一次 · 蓄力重炮”按钮，在输出锁内保留当前运动位并置 bit4，经原 AA55 状态帧转发 STM32；STM32 播放单次灯效，忙时忽略重复发射。麦克风授权改为取得遥控权后点击“开始收听”即向浏览器申请，平台未就绪时仍可触发授权并显示原因。完整 AI JSON 仍校验后下发，协议帧与运动位含义不变。
 
-当前编译配置 UART1 TX=GPIO17、RX=GPIO21，分别连接 STM32 PA10、PA9，共地。麦克风 BCLK=GPIO5、WS=GPIO4、SD=GPIO6，左声道。实际接线必须与配置一致，具体见发布说明。
+当前编译配置 UART1 TX=GPIO17、RX=GPIO21，分别连接 STM32 PA10、PA9，共地。麦克风 BCLK=GPIO5、WS=GPIO4、SD=GPIO6，左声道，蜂鸣器 PB0。实际接线必须与配置一致，具体见发布说明。
 
-最新 ESP32 固件构建及网页/证书一致性检查通过，相关业务与流程测试记录见发布说明。STM32 轮速调试更新见 [STM32 固件](stm32_motion/firmware/README.md)：前进直行 80%，转弯外侧 70%、内侧 56%，后退直行 70%；历史发布包保留原固件。最新并行音频版本仍需实机验证稳定性及控制延迟。
+ESP32 固件包含本次网页改动，STM32 固件重新构建（Flash 4148、RAM 1728 字节）。相关业务、网页与流程测试记录见发布说明。历史发布包 [2026-10-24-web-remote](releases/2026-10-24-web-remote/README.md) 保留，请按同一发布包内的固件、页面与证书配套烧录。灯效亮度、发声、真实手机授权与实车运动仍需实机验证。
 
 ## 编译与使用
 
@@ -23,7 +23,7 @@
 - [小车控制与连续监听](linx-esp32/docs/car-integration.md)
 - [配网与激活码](linx-esp32/docs/wifi-activation.md)
 - [STM32 接线与运动协议](stm32_motion/README.md)
-- [文件校验清单](releases/2026-10-24-web-remote/SHA256SUMS.txt)
+- [文件校验清单](releases/2026-10-25-fire/SHA256SUMS.txt)
 
 ## 来源与许可
 

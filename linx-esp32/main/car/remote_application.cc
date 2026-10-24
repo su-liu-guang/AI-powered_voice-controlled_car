@@ -5,14 +5,15 @@
 
 bool Application::PostRemoteEvent(RemoteEvent&& event) {
     // 控制帧直接下发，不进入可能正在建立云端 TLS 的应用任务。
-    if ((event.op == "move" || event.op == "disable") && remote_enabled_ &&
+    if ((event.op == "move" || event.op == "fire" || event.op == "disable") && remote_enabled_ &&
         !remote_releasing_ && event.client == remote_owner_ &&
         RemoteServer::Get().IsClientConnected(event.client)) {
         if (event.op == "disable") remote_releasing_ = true;
         ++remote_generation_; // 丢弃手动操作前排队、尚未执行的 AI 回调。
-        car_.ApplyRemoteState(event.op == "disable" ? 0 : event.state);
-        if (event.op == "move") {
-            RemoteServer::Get().Reply(event, true, event.state ? "方向指令已发送" : "停止指令已发送",
+        if (event.op == "fire") car_.FireRemote();
+        else car_.ApplyRemoteState(event.op == "disable" ? 0 : event.state);
+        if (event.op == "move" || event.op == "fire") {
+            RemoteServer::Get().Reply(event, true, event.op == "fire" ? "单次发射指令已发送" : event.state ? "方向指令已发送" : "停止指令已发送",
                 true, remote_recording_, remote_owner_, remote_platform_ready_);
             return true;
         }
@@ -102,6 +103,9 @@ void Application::HandleRemoteEvents() {
             // 按键永远优先于尚未返回的网页语音；释放按钮同样使该轮语音失效。
             car_.ApplyRemoteState(event.state);
             message = event.state ? "方向指令已发送" : "停止指令已发送";
+        } else if (event.op == "fire") {
+            car_.FireRemote();
+            message = "单次发射指令已发送";
         } else if (event.op == "start") {
             if (!remote_sender_task_) { ok = false; message = "音频发送任务未启动，方向按钮仍可使用"; }
             else if (!platform || !protocol_) { ok = false; message = "平台尚未就绪，方向按钮仍可使用"; }

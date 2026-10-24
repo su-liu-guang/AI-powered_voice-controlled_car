@@ -27,6 +27,9 @@ subprocess.run([
     "-I", str(root / "include"), "-T", str(root / "test" / "logic.ld"),
     str(root / "src" / "car_protocol.c"), str(root / "src" / "car_motion.c"),
     str(root / "src" / "car_uart.c"),
+    str(root / "src" / "car_fire.c"),
+    str(root / "src" / "fire_led.c"),
+    str(root / "lib" / "STM32F1" / "src" / "stm32f10x_tim.c"),
     str(root / "test" / "test_logic.c"), "-o", str(elf),
 ], check=True)
 subprocess.run([tool("objcopy"), "-O", "binary", str(elf), str(binary)], check=True)
@@ -40,10 +43,11 @@ cpu.mem_map(0x40000000, 0x20000)
 cpu.mem_write(0x10000, binary.read_bytes())
 cpu.reg_write(UC_ARM_REG_SP, 0x20005000)
 cpu.reg_write(UC_ARM_REG_LR, 0x2FFF1)
-cpu.emu_start(entry | 1, 0x2FFF0, count=10000000)
+# 包含完整蓄力期间的真实 TIM2 中断，核对 PB0 双脉冲及引脚隔离。
+cpu.emu_start(entry | 1, 0x2FFF0, count=100000000)
 if cpu.reg_read(UC_ARM_REG_PC) != 0x2FFF0:
     raise SystemExit("FAIL: tests did not return before instruction limit")
 result = cpu.reg_read(UC_ARM_REG_R0)
 if result:
     raise SystemExit(f"FAIL: test_logic.c:{result}")
-print("PASS: CRC vectors, all 32 states, 32 single-bit errors, reserved bits, stream recovery, motion mapping, UART queue wrap/overflow/error recovery")
+print("PASS: CRC, all states, stream recovery, motion, UART, three-round charge/reverse shot/full-bright lamps/retrigger/wraparound, two active-high PB0 pulses, active-low PWM and pin masks")

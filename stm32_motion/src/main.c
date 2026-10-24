@@ -4,6 +4,7 @@
 #include "car_protocol.h"
 #include "car_uart.h"
 #include "motor.h"
+#include "fire_led.h"
 
 int main(void)
 {
@@ -11,6 +12,7 @@ int main(void)
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
     Motor_Init();
     CarUart_Init();
+    FireLed_Init();
     for (;;) {
         uint8_t byte;
         uint8_t state;
@@ -22,7 +24,9 @@ int main(void)
         if (available && CarParser_Feed(&parser, byte, &state)) {
             const CarMotion motion = CarMotion_DecodeConfigured(state);
             Motor_Set(motion.left, motion.right);
+            if (state & CAR_FIRE) FireLed_Trigger();
         }
+        FireLed_Poll();
         /* 硬件 PWM 持续输出；无阻塞延时、循迹、避障或自动停车计时。 */
     }
 }

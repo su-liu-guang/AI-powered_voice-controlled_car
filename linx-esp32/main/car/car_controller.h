@@ -12,8 +12,9 @@ public:
     bool FinishReply(bool complete);
     void NextInput() { reply_.NextInput(); std::lock_guard<std::mutex> lock(output_mutex_); manual_override_ = false; }
     void DiscardReply() { reply_.Reset(); }
-    // 网页只提供四个单方向和停止，UART 输出仍使用同一入口。
+    // 方向和发射分开处理；单次发射保留当前运动位，输出共用同一把锁。
     void ApplyRemoteState(uint8_t state) { ApplyState(state & 0x0f, true); }
+    void FireRemote();
 
 private:
     CarReply reply_;
@@ -23,4 +24,5 @@ private:
     std::mutex output_mutex_;
     bool manual_override_ = false;
     void ApplyState(uint8_t state, bool manual = false);
+    void ApplyStateLocked(uint8_t state, bool manual);
 };

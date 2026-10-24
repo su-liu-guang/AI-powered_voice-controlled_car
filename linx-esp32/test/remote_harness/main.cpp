@@ -21,12 +21,16 @@ void send(Application& app, const char* op, uint32_t client=1, uint32_t id=1, ui
 int main() {
     {
         Application app;
+        send(app,"fire"); assert(!replies.back().ok); assert(app.car_.states.empty());
         send(app,"move",1,1,1); assert(!replies.back().ok); assert(app.car_.states.empty());
         app.protocol_->open=true; send(app,"enable");
         assert(app.remote_enabled_&&app.remote_owner_==1&&app.audio_service_.external);
         assert(!app.protocol_->open&&!app.remote_reply_allowed_);
         send(app,"enable",2); assert(!replies.back().ok); assert(app.remote_owner_==1);
         for(uint8_t state:{1,2,4,8,0}){send(app,"move",1,2,state);assert(app.car_.states.back()==state);}
+        send(app,"move",1,3,1);
+        send(app,"fire",2); assert(!replies.back().ok); assert(app.car_.states.back()==1);
+        send(app,"fire",1,4); assert(replies.back().ok); assert(app.car_.states.back()==0x11);
         send(app,"disable"); assert(!app.remote_enabled_&&!app.audio_service_.external&&app.toggles==1);
         assert(app.car_.states.back()==0);
     }
@@ -94,6 +98,9 @@ int main() {
         RemoteEvent stop;stop.op="move";stop.client=1;stop.id=50;stop.state=0;
         assert(app.PostRemoteEvent(std::move(stop)));assert(app.car_.states.back()==0);
         assert(replies.back().id==50&&replies.back().ok);
+        RemoteEvent fire;fire.op="fire";fire.client=1;fire.id=52;
+        assert(app.PostRemoteEvent(std::move(fire)));assert(app.car_.states.back()==0x10);
+        assert(replies.back().id==52&&replies.back().ok);
         RemoteEvent close;close.op="disable";close.client=1;close.id=51;
         assert(app.PostRemoteEvent(std::move(close)));assert(app.car_.states.back()==0);
         app.HandleRemoteEvents();assert(!app.remote_enabled_&&app.toggles==1);

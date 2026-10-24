@@ -41,6 +41,7 @@ struct FakeCar {
     void DiscardReply() { ++resets; }
     void NextInput() {}
     void ApplyRemoteState(uint8_t state) { states.push_back(state); }
+    void FireRemote() { states.push_back((states.empty() ? 0 : states.back() & 0x0f) | 0x10); }
 };
 // 仅替换硬件/调度依赖，直接编译真实的 remote_application.cc。
 class Application {
