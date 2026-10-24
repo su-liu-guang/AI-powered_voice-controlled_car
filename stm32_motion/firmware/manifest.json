@@ -79,7 +79,8 @@
   "verification": {
     "release_build": "passed",
     "arm_logic_tests": "passed",
-    "hardware_test": "not_performed"
+    "hardware_test": "passed; user flashed this firmware and verified the charge-shot light effect, PB0 double beep and vehicle motion on 2026-10-25",
+    "hardware_verified_by_user": true
   },
   "artifacts": {
     "firmware.bin": {

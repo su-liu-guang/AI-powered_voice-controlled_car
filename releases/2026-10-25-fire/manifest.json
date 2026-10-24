@@ -93,7 +93,8 @@
     "remote_flow_harness": "9 groups passed against real remote_application.cc",
     "stm32_build": "release build passed",
     "stm32_arm_logic_tests": "passed in ARM emulator",
-    "hardware_tests": "not performed; flash effect brightness, buzzer sound and phone authorization prompts unverified",
+    "hardware_tests": "passed; user flashed the package and verified the flash light effect, PB0 buzzer, phone microphone authorization and real-vehicle motion on 2026-10-25",
+    "hardware_verified_by_user": true,
     "flashed_by_assistant": false
   },
   "web_remote": {
